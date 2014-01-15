@@ -1,0 +1,15 @@
+<dataConfig>
+
+    <dataSource driver="org.postgresql.Driver" url="jdbc:postgresql://localhost/testing" user="postgres" password="testing" batch-size="-1"/>
+   
+    <document>
+       <entity name="user" pk="id" query="select * from users">
+		  <field column="id" name="id" type="long"/>
+		  <field column="name" name="userName" type="string"/>    
+         
+          <entity name="tweet"  multiValued="true" query="SELECT MESSAGE FROM TWEET WHERE USER_ID='${user.id}'"> 
+				<field name="tweet" column="MESSAGE" type="string" />
+		  </entity>
+	   </entity>	   
+    </document>	
+</dataConfig>
