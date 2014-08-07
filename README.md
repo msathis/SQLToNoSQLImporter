@@ -4,7 +4,10 @@ SQLToNoSQLImporter
 
 INTRODUCTION : 
 
-	SQLToNoSQLImporter is a Solr like data import handler to import Sql (MySQL,Oracle,PostgreSQL) data to NoSQL Systems (Mongodb,CouchDB,Elastic Search). Migration of data from Sql to Mongodb or couchDB or Elasticsearch is now quite simple. Just write a configuration to import the data, this tool will export the data to your preferred NoSQL system. SQLToNoSQLImporter reads from sql databases, converts and then inserts them into NoSQL datastore.For this purpose it uses one properties file (import.properties) where NoSQL datastore related settings are listed and one xml file with sql database related settings ,de-normalized schema,fields.For more info http://wiki.apache.org/solr/DataImportHandler#Configuration_in_data-config.xml
+	SQLToNoSQLImporter is a Solr like data import handler to import Sql (MySQL,Oracle,PostgreSQL) data to NoSQL Systems (Mongodb,CouchDB,Elastic Search). 
+	Migration of data from Sql to Mongodb or couchDB or Elasticsearch is now quite simple. Just write a configuration to import the data, this tool will export the data to your preferred NoSQL system. 
+	SQLToNoSQLImporter reads from sql databases, converts and then inserts them into NoSQL datastore.For this purpose it uses one properties file (import.properties) where NoSQL datastore related settings are listed and one xml file with sql database related settings ,de-normalized schema,fields.
+	For more info http://wiki.apache.org/solr/DataImportHandler#Configuration_in_data-config.xml
 
 But the configuration file of SQLToNoSQLImporter varies slightly from solr's.
 
