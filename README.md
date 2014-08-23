@@ -30,27 +30,7 @@ But the configuration file of SQLToNoSQLImporter varies slightly from solr's DIH
 	
    src/main/resources/db-data-config.xml
 
-	Most of the things are same as Solr's dataimport configuration file.For more info about Solr's configuration elements.
-	   http://wiki.apache.org/solr/DataImportHandler
-
-	The root entity's name will be used as collection name. If collection is not there, then it will be created. Field name which is given in the value 			of root entity's pk attribute will be used as primary key for the collection.
-
-	Lets list The differences between our configuration file and Solr's dataimport configuration file
-	
-	1. Solr uses two configuration files (schema.xml,db-data-config.xml).SQLToNoSQLImporter uses only one configuration file.(db-data-config.xml).
-	
-	2. Field definitions have one more attribute "type".It is a mandatory one. Possible values are (STRING, INTEGER, DOUBLE, LONG, DATE, BOOLEAN).
-	
-	3. Entity definitions have one or more optional attributes "multiValued".Possible values are (true, false).
-	
-	4. In Solr fields are multivalued. But in SQLToNoSQLImporter entities are multivalued.
-	
-	5. a) If one multivalued entity has only one field it will be converted to array list.
-		"tags" : [ "mongodb", "couchdb", "hbase", "cassandra", "riak"]
-	   b) If one multivalued entity has more than one field it will be converted to array list of objects.
-		"tags" : [ { "name" : "mongodb" , "type" : "document"}, { "name" : "couchdb" , "type" : "document"},
-			   { "name" : "hbase" , "type" : "bigtable"}, { "name" : "cassandra" , "type" : "bigtable"}, 
-			   { "name" : "riak" , "type" : "key-value"}]
+	Data conversion configuration. Similar to Solr's DIH.
 			   
 
 **ISSUES:**
