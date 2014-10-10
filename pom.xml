@@ -94,6 +94,10 @@
                         </goals>
                         <configuration>
                             <mainClass>net.sathis.export.sql.SQLToNoSQLImporter</mainClass>
+                            <arguments>
+                                <argument>${importConf}</argument>
+                                <argument>${dbConf}</argument>
+                            </arguments>
                         </configuration>
                     </execution>
                 </executions>

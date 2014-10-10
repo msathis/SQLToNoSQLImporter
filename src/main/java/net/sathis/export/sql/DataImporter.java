@@ -1,22 +1,11 @@
 package net.sathis.export.sql;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
-
-import javax.naming.directory.InvalidAttributesException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import net.sathis.export.sql.couch.CouchWriter;
 import net.sathis.export.sql.es.ESWriter;
 import net.sathis.export.sql.model.DataConfig;
 import net.sathis.export.sql.model.DataStoreType;
 import net.sathis.export.sql.model.NoSQLWriter;
 import net.sathis.export.sql.mongo.MongoWriter;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,6 +13,16 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+
+import javax.naming.directory.InvalidAttributesException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 
 
@@ -77,8 +76,15 @@ public class DataImporter {
 		getWriter().initConnection(rb);
 	}
 
-	public void doDataImport(String configFile) {
-			InputSource file = new InputSource(Thread.currentThread().getContextClassLoader().getResource(configFile).getFile());
+    private String getXmlFile(String path) {
+        if (new File(path).exists()) {
+            return path;
+        }
+        return  Thread.currentThread().getContextClassLoader().getResource(path).getFile();
+    }
+
+	public void doDataImport(String path) {
+			InputSource file = new InputSource(getXmlFile(path));
 		  	loadDataConfig(file);
 		  	
 			if (config != null) {

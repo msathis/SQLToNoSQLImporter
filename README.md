@@ -20,7 +20,8 @@ But the configuration file of SQLToNoSQLImporter varies slightly from solr's DIH
     1. change sql-db related settings in src/main/resources/db-data-config.xml
 	2. change NoSQL datastore related settings in src/main/resources/import.properties
 	3. Install and export maven to PATH.
-	4. Run the project by issuing *mvn test*
+	4. Run the project by issuing mvn test
+	5. Or you can pass configuration files through command line like  mvn test -DimportConf=/Users/sathis/Desktop/data-import.properties -DdbConf=/Users/sathis/Desktop/data-config.xml 
 	
 **CONFIGURATIONS :**
 	
