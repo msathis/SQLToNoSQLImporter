@@ -1,8 +1,5 @@
 package net.sathis.export.sql;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Locale;
@@ -11,18 +8,12 @@ import java.util.ResourceBundle;
 
 public class SQLToNoSQLImporter {
 
-  private static Log log = LogFactory.getLog(SQLToNoSQLImporter.class);
-
   public static void main(String[] args) throws Exception {
 
-      String importConf = "import.properties", dbConf = "db-data-config.xml";
+      String dbConf = args.length > 1 && args[1] != null ? args[1] : "db-data-config.xml";
+      ResourceBundle rb = args.length > 0 && args[0] != null ? getResourceBundle(args[0], Locale.US)
+              : getDefaultRB(Locale.US);
 
-      importConf = args.length > 0 ? args[0] : importConf;
-      dbConf = args.length > 1 ? args[1] : dbConf;
-
-      log.info("Configuration files are 1. " + importConf + " , 2. " + dbConf);
-
-      ResourceBundle rb = getResourceBundle(importConf, Locale.US);
       DataImporter importer = new DataImporter(rb);
       importer.setAutoCommitSize(Integer.valueOf(rb.getString("autoCommitSize")));
       importer.doDataImport(dbConf);
@@ -35,6 +26,10 @@ public class SQLToNoSQLImporter {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return ResourceBundle.getBundle(url.split("\\.")[0], Locale.US);
+        return ResourceBundle.getBundle(url.split("\\.")[0], locale);
+    }
+
+    private static ResourceBundle getDefaultRB(Locale locale) {
+        return ResourceBundle.getBundle("import", locale);
     }
 }
