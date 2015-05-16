@@ -140,43 +140,9 @@ public class DocBuilder {
 			entityMap = new HashMap<String, Object>();
 			
 			if (entity.allAttributes.get(MULTI_VALUED) != null && entity.allAttributes.get(MULTI_VALUED).equalsIgnoreCase("true")) {
-				List<Object> fieldArray = new ArrayList<Object>();
-				rs.beforeFirst();
-				while(rs.next()) {
-					if (entity.fields.size() > 1) {
-						Map<String, Object> entityFieldsMap = new HashMap<String, Object>();
-						for (Iterator<Field> iterator = entity.fields.iterator(); iterator.hasNext();) {
-							Field field = (Field) iterator.next();
-							FieldType fieldType = FieldType.valueOf(field.allAttributes.get("type").toUpperCase());
-							entityFieldsMap.put(field.name, convertFieldType(fieldType, rs.getObject(field.column)).get(0));
-						}
-						fieldArray.add(entityFieldsMap);
-					} else if (entity.fields.size() == 1) {
-						fieldArray.add(rs.getObject(entity.fields.get(0).column));
-					}
-				}
-				rootEntityMap.put(entity.name, fieldArray);
+                getMultiValuedEntity(rs, entity, rootEntityMap);
 			} else if(firstRow != null) {
-				for (Iterator<Field> iterator = entity.fields.iterator(); iterator.hasNext();) {
-					Field field = (Field) iterator.next();
-					FieldType fieldType = FieldType.valueOf(field.allAttributes.get("type").toUpperCase());
-					
-					if (firstRow.get(field.column) != null) {
-						if (entity.pk != null && entity.pk.equals(field.name)) {
-						     if (importer.getDataStoreType().equals(DataStoreType.MONGO)) {
-						       entityMap.put("_id", convertFieldType(fieldType, firstRow.get(field.column)).get(0));
-						     } else if (importer.getDataStoreType().equals(DataStoreType.COUCH)) {
-						       //couch db says document id must be string
-						       entityMap.put("_id", convertFieldType(FieldType.STRING, firstRow.get(field.column)).get(0));
-						     }
-						} else {
-							entityMap.put(field.getName(), convertFieldType(fieldType, firstRow.get(field.column)).get(0));
-						}
-							
-						params.put(entity.name + "." + field.name, firstRow.get(field.column).toString());
-					}
-					
-				}
+                getSingleValuedEntity(firstRow, rs, entity, entityMap);
 			}
 
 		
@@ -214,9 +180,62 @@ public class DocBuilder {
     }
 		return entityMap;
 	}
-	
-	
-	public List<Object> convertFieldType(FieldType fieldType, Object object) {
+
+    private void getMultiValuedEntity(ResultSet rs, Entity entity, Map<String, Object> rootEntityMap) throws SQLException {
+        List<Object> fieldArray = new ArrayList<Object>();
+        rs.beforeFirst();
+        while(rs.next()) {
+            if (entity.fields.size() > 1) {
+                Map<String, Object> entityFieldsMap = new HashMap<String, Object>();
+                for (Iterator<Field> iterator = entity.fields.iterator(); iterator.hasNext();) {
+                    Field field = iterator.next();
+                    FieldType fieldType = FieldType.valueOf(field.allAttributes.get("type").toUpperCase());
+                    entityFieldsMap.put(field.name, convertFieldType(fieldType, rs.getObject(field.column)).get(0));
+                }
+                fieldArray.add(entityFieldsMap);
+            } else if (entity.fields.size() == 1) {
+                fieldArray.add(rs.getObject(entity.fields.get(0).column));
+            }
+        }
+        rootEntityMap.put(entity.name, fieldArray);
+    }
+
+    private void getSingleValuedEntity(Map<String, Object> firstRow, ResultSet rs, Entity entity, Map<String, Object> entityMap) throws SQLException {
+        int totalRows = rs.getMetaData().getColumnCount();
+
+        for (int i = 0; i < totalRows; i++) {
+            extractFieldValue(firstRow, entity, entityMap, rs.getMetaData().getColumnLabel(i + 1),
+                    rs.getMetaData().getColumnLabel(i + 1), null);
+        }
+
+        for (Iterator<Field> iterator = entity.fields.iterator(); iterator.hasNext();) {
+            Field field = iterator.next();
+            FieldType fieldType = FieldType.valueOf(field.allAttributes.get("type").toUpperCase());
+
+            if (firstRow.get(field.column) != null) {
+                entityMap.remove(field.column);
+                extractFieldValue(firstRow, entity, entityMap, field.name, field.column, fieldType);
+            }
+
+        }
+    }
+
+    private void extractFieldValue(Map<String, Object> firstRow, Entity entity, Map<String, Object> entityMap, String fieldName, String fieldColumn, FieldType fieldType) {
+        if (entity.pk != null && entity.pk.equals(fieldName)) {
+             if (importer.getDataStoreType().equals(DataStoreType.MONGO) || importer.getDataStoreType().equals(DataStoreType.COUCH)) {
+               entityMap.put("_id", convertFieldType(FieldType.STRING, firstRow.get(fieldColumn)).get(0));
+             }
+        } else if (fieldType != null) {
+            entityMap.put(fieldName, convertFieldType(fieldType, firstRow.get(fieldColumn)).get(0));
+        } else {
+            entityMap.put(fieldName, firstRow.get(fieldColumn));
+        }
+
+        params.put(entity.name + "." + fieldName, firstRow.get(fieldColumn).toString());
+    }
+
+
+    public List<Object> convertFieldType(FieldType fieldType, Object object) {
 		List<Object> temp = new ArrayList<Object>(1);
 		if (fieldType.equals(FieldType.DATE)) {
 			temp.add( FieldTypeParser.dateToString(object));
