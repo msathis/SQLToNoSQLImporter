@@ -215,6 +215,8 @@ public class DocBuilder {
             if (firstRow.get(field.column) != null) {
                 entityMap.remove(field.column);
                 extractFieldValue(firstRow, entity, entityMap, field.name, field.column, fieldType);
+            } else if (field.defaultValue != null) {
+                entityMap.put(field.name, field.defaultValue);
             }
 
         }

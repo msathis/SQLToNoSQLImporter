@@ -16,19 +16,14 @@ package net.sathis.export.sql.model;
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.sql.DataSource;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * <p>
@@ -182,6 +177,8 @@ public class DataConfig {
     public String column;
 
     public String name;
+
+    public String defaultValue;
 
     public Float boost = 1.0f;
 
