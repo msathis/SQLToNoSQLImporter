@@ -233,7 +233,10 @@ public class DocBuilder {
             entityMap.put(fieldName, firstRow.get(fieldColumn));
         }
 
-        params.put(entity.name + "." + fieldName, firstRow.get(fieldColumn).toString());
+        if (firstRow.get(fieldColumn) != null)
+        	params.put(entity.name + "." + fieldName, firstRow.get(fieldColumn).toString());
+        else
+        	params.put(entity.name + "." + fieldName, "");
     }
 
 
