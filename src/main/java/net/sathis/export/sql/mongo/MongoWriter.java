@@ -7,14 +7,18 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import com.mongodb.*;
+import com.mongodb.util.JSON;
 import net.sathis.export.sql.model.NoSQLWriter;
 
+import net.sf.json.JSONArray;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class MongoWriter extends NoSQLWriter {
-	
-	DBCollection collection = null;
+
+	List<DBCollection> collections = new ArrayList<DBCollection>();
+
+	private static int count = 0;
 	
 	private DB db;
 	
@@ -32,11 +36,14 @@ public class MongoWriter extends NoSQLWriter {
 		} else {
 			initConnection( rb.getString("mongo.host"), rb.getString("mongo.db") );
 		}
-		initCollection(rb.getString("mongo.collection"));
+		initCollections(rb.getString("mongo.collection").split(","));
 	}
-	
-	private void initCollection(String name) {
-		collection = getDB().getCollection(name);
+
+	private void initCollections(String[] name) {
+
+		for (String coll : name){
+			collections.add(getDB().getCollection(coll));
+		}
 	}
 	
 	public void initConnection(String url, String dbName) throws UnknownHostException, MongoException {
@@ -52,21 +59,27 @@ public class MongoWriter extends NoSQLWriter {
 			throw new MongoException("Couldn't Authenticate !!!!!!.........");
 		}
 	}
-	
+
 	@Override
 	public void writeToNoSQL(List<Map<String, Object>> entityList) {
+		JSONArray array = JSONArray.fromObject(entityList);
 		List<DBObject> list = new ArrayList<DBObject>();
 		DBObject object = null;
-		for (int i = 0; i < entityList.size(); i++) {
-			object = new BasicDBObject(entityList.get(i));
+		for (int i = 0; i < array.size(); i++) {
+			object = (DBObject) JSON.parse(array.get(i).toString());
 			list.add(object);
 		}
 		if (list.size() > 0) {
 			long  t1 = System.currentTimeMillis();
-			collection.insert(list);
+			if (count < collections.size()){
+				collections.get(count).insert(list);
+				count++;
+			}
 			long t2 = System.currentTimeMillis();
 			log.info("Time taken to Write "+ list.size() + " documents to NoSQL :" + ((t2-t1))  + " ms");
+			list = null;  // Free objects
+			entityList = null;  // Free objects
 		}
-			
-}
+
+	}
 }

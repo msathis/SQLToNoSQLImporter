@@ -1,15 +1,22 @@
 <dataConfig>
 
-    <dataSource driver="org.postgresql.Driver" url="jdbc:postgresql://localhost/testing" user="postgres" password="testing" batch-size="-1"/>
-   
+    <dataSource driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/fulfillment_ddb1" user="root" password="" batch-size="1"/>
+
     <document>
-       <entity name="user" pk="id" query="select * from users">
-		  <field column="id" name="id" type="long"/>
-		  <field column="name" name="userName" type="string"/>    
-         
-          <entity name="tweet"  multiValued="true" query="SELECT MESSAGE FROM TWEET WHERE USER_ID='${user.id}'"> 
-				<field name="tweet" column="MESSAGE" type="string" />
-		  </entity>
-	   </entity>	   
-    </document>	
+        <entity name="customer" pk="id" query="select * from customer where updated_at > '${dih.last_index_time}'">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="password" name="password" type="STRING"/>
+        </entity>
+        <entity name="document" pk="id" query="select * from document">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="name" name="name" type="STRING"/>
+            <field column="description" name="description" type="STRING"/>
+        </entity>
+    </document>
 </dataConfig>
