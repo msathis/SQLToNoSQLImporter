@@ -1,5 +1,6 @@
 package net.sathis.export.sql;
 
+import com.mysql.jdbc.JDBC4ResultSet;
 import net.sathis.export.sql.model.DataConfig.Entity;
 import net.sathis.export.sql.model.DataConfig.Field;
 import net.sathis.export.sql.model.DataStoreType;
@@ -41,7 +42,7 @@ import java.util.regex.Pattern;
 
 /**
  * <p> {@link DocBuilder} is responsible for creating Solr documents out of the given configuration. It also maintains
- * statistics information. It depends on the {@link EntityProcessor} implementations to fetch data. </p>
+ * statistics information. It depends on the implementations to fetch data. </p>
  * <p/>
  * <b>This API is experimental and subject to change</b>
  *
@@ -88,6 +89,7 @@ public class DocBuilder {
 	    String password = importer.getConfig().dataSources.get(null).getProperty("password");
 	    batchSize = Integer.valueOf(importer.getConfig().dataSources.get(null).getProperty("batch-size"));
 	    Entity rootEntity = importer.getConfig().document.entities.get(0);
+        List<Entity> listOfEntities = importer.getConfig().document.entities;
 	    String driverName = importer.getConfig().dataSources.get(null).getProperty(DRIVER);
 	   
 	    //Set the fetch size depending on SQL type
@@ -95,43 +97,61 @@ public class DocBuilder {
 	        batchSize = Integer.MIN_VALUE;
 	    else if (batchSize == -1)
 	    	  batchSize = 0;
-	    
-	    Class.forName(driverName).newInstance();
-	    conn = DriverManager.getConnection(url, user, password);
-	    subConnection = DriverManager.getConnection(url, user, password);
-	    
-	    //set the PK for future use
-	    importer.getWriter().setPrimaryKey(rootEntity.pk);
-	   
-	    if (rootEntity != null && rootEntity.isDocRoot) {
-	    	String rootQuery = rootEntity.allAttributes.get("query");
-	    	stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-	    	stmt.setMaxRows(0);
-	    	stmt.setFetchSize(batchSize);
-	    	rs = stmt.executeQuery(rootQuery);
-	    	int i = 0;
-	    	List<Map<String, Object>> entityList = new ArrayList<Map<String, Object>>();
-	    	long t1 = System.currentTimeMillis();
-	    	
-      while (rs.next()) {
-        if (i == importer.getAutoCommitSize()) {
-          long t2 = System.currentTimeMillis();
-          log.info("Time taken to Read " + i + " documents from SQL : "
-              + (t2 - t1) + " ms");
-          importer.getWriter().writeToNoSQL(entityList);
-          entityList = new ArrayList<Map<String,Object>>();
-          i = 0;
-          t1 = System.currentTimeMillis();
+        try {
+            Class.forName(driverName).newInstance();
+            conn = DriverManager.getConnection(url, user, password);
+            subConnection = DriverManager.getConnection(url, user, password);
+
+            //set the PK for future use
+            importer.getWriter().setPrimaryKey(rootEntity.pk);
+            int count = 0;
+            String queryForLastModifiedTime = "select MAX(last_modified_at) from sql_to_mongo_history";
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            String queryCondtn = " where updated_at <= '" + FieldTypeParser.dateToString(timestamp) + "'";
+            stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            stmt.setMaxRows(0);
+            stmt.setFetchSize(batchSize);
+            rs = stmt.executeQuery(queryForLastModifiedTime);
+            if (rs.next() && rs.getString("MAX(last_modified_at)") != null){
+                queryCondtn += " AND updated_at > '" + rs.getString("MAX(last_modified_at)") +"';";
+            }
+            while (count < listOfEntities.size()) {
+                String query = listOfEntities.get(count).allAttributes.get("query") + queryCondtn;
+                stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                stmt.setMaxRows(0);
+                stmt.setFetchSize(batchSize);
+                rs = stmt.executeQuery(query);
+                int i = 0;
+                List<Map<String, Object>> entityList = new ArrayList<Map<String, Object>>();
+                long t1 = System.currentTimeMillis();
+
+                while (rs.next()) {
+                    if (i == importer.getAutoCommitSize()) {
+                        long t2 = System.currentTimeMillis();
+                        log.info("Time taken to Read " + i + " documents from SQL : "
+                                + (t2 - t1) + " ms");
+                        importer.getWriter().writeToNoSQL(entityList);
+                        entityList = new ArrayList<Map<String, Object>>();
+                        i = 0;
+                        t1 = System.currentTimeMillis();
+                    }
+                    params = new HashMap<String, String>();
+                    entityList.add(getFields(processor.toMap(rs), rs, listOfEntities.get(count), null, null));
+                    i++;
+                }
+                importer.getWriter().writeToNoSQL(entityList);
+                count++;
+            }
+            String queryToAddCurrTime = "INSERT INTO sql_to_mongo_history (last_modified_at) VALUES ('"+ FieldTypeParser.dateToString(timestamp) + "')";
+            stmt = conn.createStatement();
+            stmt.executeUpdate(queryToAddCurrTime);
+        }catch (Exception e) {
+            log.error("Error occured during import : " + e.getMessage());
+        } finally {
+            stmt.close();
+            conn.close();
+            subConnection.close();
         }
-        params = new HashMap<String,String>();
-        entityList.add(getFields(processor.toMap(rs), rs, rootEntity, null, null));
-        i++;
-      }
-	    	importer.getWriter().writeToNoSQL(entityList);
-	    }
-	    
-	    conn.close();
-	    subConnection.close();
 	}
 	
 
@@ -248,7 +268,11 @@ public class DocBuilder {
 			temp.add( FieldTypeParser.getString(object));
 		} else if (fieldType.equals(FieldType.INTEGER)) {
 			temp.add( FieldTypeParser.getInt(object));
-		} else if (fieldType.equals(FieldType.DOUBLE)) {
+		} else if (fieldType.equals(FieldType.BIGINTEGER)) {
+            temp.add(FieldTypeParser.getBigint(object));
+        } else if (fieldType.equals(FieldType.BIGDECIMAL)) {
+            temp.add(FieldTypeParser.getBigDecimal(object));
+        } else if (fieldType.equals(FieldType.DOUBLE)) {
 			temp.add( FieldTypeParser.getDouble(object));
 		} else if (fieldType.equals(FieldType.LONG)) {
 			temp.add( FieldTypeParser.getLong(object));

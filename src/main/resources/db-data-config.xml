@@ -1,15 +1,185 @@
 <dataConfig>
 
-    <dataSource driver="org.postgresql.Driver" url="jdbc:postgresql://localhost/testing" user="postgres" password="testing" batch-size="-1"/>
-   
+    <dataSource driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/fulfillment_ddb1" user="root" password="" batch-size="1"/>
+
     <document>
-       <entity name="user" pk="id" query="select * from users">
-		  <field column="id" name="id" type="long"/>
-		  <field column="name" name="userName" type="string"/>    
-         
-          <entity name="tweet"  multiValued="true" query="SELECT MESSAGE FROM TWEET WHERE USER_ID='${user.id}'"> 
-				<field name="tweet" column="MESSAGE" type="string" />
-		  </entity>
-	   </entity>	   
-    </document>	
+        <entity name="customer" query="select * from customer">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="password" name="password" type="STRING"/>
+        </entity>
+        <entity name="document" query="select * from document">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="name" name="name" type="STRING"/>
+            <field column="description" name="description" type="STRING"/>
+        </entity>
+        <entity name="invoice_header" query="select * from invoice_header">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="order_header_id" name="order_header_id" type="BIGINTEGER"/>
+            <field column="payment_id" name="payment_id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="invoice_creation_time" name="invoice_creation_time" type="DATE"/>
+        </entity>
+        <entity name="invoice_item" query="select * from invoice_item">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="invoice_header_id" name="invoice_header_id" type="BIGINTEGER"/>
+            <field column="order_item_id" name="order_item_id" type="BIGINTEGER"/>
+            <field column="list_price" name="list_price" type="BIGDECIMAL"/>
+            <field column="service_tax" name="service_tax" type="BIGDECIMAL"/>
+            <field column="swachh_bharat_cess" name="swachh_bharat_cess" type="BIGDECIMAL"/>
+            <field column="krishi_kalyan_cess" name="krishi_kalyan_cess" type="BIGDECIMAL"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="coupon_discount" name="coupon_discount" type="BIGDECIMAL"/>
+            <field column="gross_price" name="gross_price" type="BIGDECIMAL"/>
+        </entity>
+        <entity name="listing" query="select * from listing">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="product_id" name="product_id" type="BIGINTEGER"/>
+            <field column="service_provider_id" name="service_provider_id" type="BIGINTEGER"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+        </entity>
+        <entity name="order_header" query="select * from order_header">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="customer_id" name="customer_id" type="BIGINTEGER"/>
+            <field column="customer_phone_number" name="customer_phone_number" type="STRING"/>
+            <field column="customer_email" name="customer_email" type="STRING"/>
+            <field column="status_item_id" name="status_item_id" type="BIGINTEGER"/>
+            <field column="customer_order_timestamp" name="customer_order_timestamp" type="DATE"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="coupon_code" name="coupon_code" type="STRING"/>
+        </entity>
+        <entity name="order_item" query="select * from order_item">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="order_header_id" name="order_header_id" type="BIGINTEGER"/>
+            <field column="listing_id" name="listing_id" type="BIGINTEGER"/>
+            <field column="current_service_provider_id" name="current_service_provider_id" type="BIGINTEGER"/>
+            <field column="status_item_id" name="status_item_id" type="BIGINTEGER"/>
+            <field column="priority_item_id" name="priority_item_id" type="BIGINTEGER"/>
+            <field column="sla_promised" name="sla_promised" type="INTEGER"/>
+            <field column="list_price" name="list_price" type="BIGDECIMAL"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="zendesk_ticket_id" name="zendesk_ticket_id" type="STRING"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="last_document_updated_at" name="last_document_updated_at" type="DATE"/>
+            <field column="coupon_discount" name="coupon_discount" type="BIGDECIMAL"/>
+            <field column="service_tax" name="service_tax" type="BIGDECIMAL"/>
+            <field column="swachh_bharat_cess" name="swachh_bharat_cess" type="BIGDECIMAL"/>
+            <field column="krishi_kalyan_cess" name="krishi_kalyan_cess" type="BIGDECIMAL"/>
+            <field column="gross_price" name="gross_price" type="BIGDECIMAL"/>
+            <field column="fulfill_by" name="fulfill_by" type="DATE"/>
+        </entity>
+        <entity name="order_item_document" query="select * from order_item_document">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="order_item_id" name="order_item_id" type="BIGINTEGER"/>
+            <field column="password" name="password" type="STRING"/>
+            <field column="document_id" name="document_id" type="BIGINTEGER"/>
+            <field column="s3_url" name="s3_url" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="uploaded_at" name="uploaded_at" type="DATE"/>
+            <field column="comments" name="comments" type="STRING"/>
+        </entity>
+        <entity name="order_item_event" query="select * from order_item_event">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="order_item_id" name="order_item_id" type="BIGINTEGER"/>
+            <field column="status_item_id" name="status_item_id" type="BIGINTEGER"/>
+            <field column="service_provider_id" name="service_provider_id" type="BIGINTEGER"/>
+            <field column="priority_item_id" name="priority_item_id" type="BIGINTEGER"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="event_at" name="event_at" type="DATE"/>
+            <field column="event_type" name="event_type" type="STRING"/>
+            <field column="description" name="description" type="STRING"/>
+            <field column="comment" name="comment" type="STRING"/>
+            <field column="actor" name="actor" type="STRING"/>
+            <field column="user_id" name="user_id" type="STRING"/>
+            <field column="actor_external_id" name="actor_external_id" type="STRING"/>
+        </entity>
+        <entity name="order_item_note" query="select * from order_item_note">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="order_item_id" name="order_item_id" type="BIGINTEGER"/>
+            <field column="comments" name="comments" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+        </entity>
+        <entity name="payment" query="select * from payment">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="amount_paid" name="amount_paid" type="BIGDECIMAL"/>
+            <field column="order_header_id" name="order_header_id" type="BIGINTEGER"/>
+            <field column="transaction_id" name="transaction_id" type="STRING"/>
+            <field column="payment_method" name="payment_method" type="STRING"/>
+            <field column="payment_gateway" name="payment_gateway" type="STRING"/>
+            <field column="status_item_id" name="status_item_id" type="BIGINTEGER"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="payment_gateway_response" name="payment_gateway_response" type="STRING"/>
+            <field column="payment_gateway_response_string" name="payment_gateway_response_string" type="STRING"/>
+            <field column="comments" name="comments" type="STRING"/>
+        </entity>
+        <entity name="priority_item" query="select * from priority_item">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="priority_type" name="priority_type" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+        </entity>
+        <entity name="product" query="select * from product">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="workflow_id" name="workflow_id" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="name" name="name" type="STRING"/>
+        </entity>
+        <entity name="service_provider" query="select * from service_provider">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="external_id" name="external_id" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="email" name="email" type="STRING"/>
+            <field column="phone_number" name="phone_number" type="STRING"/>
+        </entity>
+        <entity name="status_item" query="select * from status_item">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="entity_type" name="entity_type" type="STRING"/>
+            <field column="status_type" name="status_type" type="STRING"/>
+            <field column="customer_facing_name" name="customer_facing_name" type="STRING"/>
+            <field column="service_provider_facing_name" name="service_provider_facing_name" type="STRING"/>
+            <field column="is_terminal_state" name="is_terminal_state" type="BOOLEAN"/>
+            <field column="status_viewer" name="status_viewer" type="STRING"/>
+            <field column="status_group" name="status_group" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+            <field column="is_sp_required" name="is_sp_required" type="BOOLEAN"/>
+            <field column="sp_status_group" name="sp_status_group" type="STRING"/>
+            <field column="is_reversible_state" name="is_reversible_state" type="BOOLEAN"/>
+        </entity>
+        <entity name="workflow" query="select * from workflow">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="initial_status_item_id" name="initial_status_item_id" type="BIGINTEGER"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+        </entity>
+        <entity name="workflow_state_transition" query="select * from workflow_state_transition">
+            <field column="id" name="id" type="BIGINTEGER"/>
+            <field column="workflow_id" name="workflow_id" type="BIGINTEGER"/>
+            <field column="current_status_item_id" name="current_status_item_id" type="BIGINTEGER"/>
+            <field column="next_status_item_id" name="next_status_item_id" type="BIGINTEGER"/>
+            <field column="validator_fqn" name="validator_fqn" type="STRING"/>
+            <field column="created_at" name="created_at" type="DATE"/>
+            <field column="updated_at" name="updated_at" type="DATE"/>
+        </entity>
+    </document>
 </dataConfig>
