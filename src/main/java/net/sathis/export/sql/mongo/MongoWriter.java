@@ -68,32 +68,20 @@ public class MongoWriter extends NoSQLWriter {
 		for (int i = 0; i < array.size(); i++) {
 			object = (DBObject) JSON.parse(array.get(i).toString());
 			list.add(object);
-//			if (count < collections.size()){
-//				object1 = (DBObject) collections.get(count).findOne(object);
-//				if (object1 != null){
-//					listOfExistingObj.put(object1,object);
-//				}
-//			}
 		}
 		if (list.size() > 0) {
 			long  t1 = System.currentTimeMillis();
 			if (count < collections.size()){
-//				collections.get(count).insert(list);
-//				for(DBObject dbObject : listOfExistingObj.keySet()){
-//					collections.get(count).update(dbObject,listOfExistingObj.get(dbObject));
-//				}
-//				WriteConcern writeConcern = WriteConcern.ERRORS_IGNORED;
-				//collections.get(count).insert(list);
 				for (DBObject ob : list) {
 					BasicDBObject newDocument = new BasicDBObject();
 					newDocument.append("$set", ob);
 					BasicDBObject dbObject = new BasicDBObject().append("id",ob.get("id"));
 					collections.get(count).update(dbObject, newDocument, true, false);
 				}
-				count++;
+                long t2 = System.currentTimeMillis();
+                log.info("Time taken to Write "+ list.size() + " documents to NoSQL :" + ((t2-t1))  + " ms, for Collection :" +collections.get(count));
+                count++;
 			}
-			long t2 = System.currentTimeMillis();
-			log.info("Time taken to Write "+ list.size() + " documents to NoSQL :" + ((t2-t1))  + " ms");
 			list = null;  // Free objects
 			entityList = null;  // Free objects
 		}

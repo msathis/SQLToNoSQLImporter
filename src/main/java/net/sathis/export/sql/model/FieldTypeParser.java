@@ -1,5 +1,6 @@
 package net.sathis.export.sql.model;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -74,5 +75,14 @@ public class FieldTypeParser {
 	 */
 	public static BigInteger getBigint(Object o) {
 		return new BigInteger(o.toString());
+	}
+
+	/**
+	 * Convert to BigDecimal
+	 * @param o
+	 * @return
+	 */
+	public static BigDecimal getBigDecimal(Object o) {
+		return new BigDecimal(o.toString());
 	}
 }
