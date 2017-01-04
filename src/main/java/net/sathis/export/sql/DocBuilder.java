@@ -248,7 +248,11 @@ public class DocBuilder {
 			temp.add( FieldTypeParser.getString(object));
 		} else if (fieldType.equals(FieldType.INTEGER)) {
 			temp.add( FieldTypeParser.getInt(object));
-		} else if (fieldType.equals(FieldType.DOUBLE)) {
+		} else if (fieldType.equals(FieldType.BIGINTEGER)) {
+            temp.add(FieldTypeParser.getBigint(object));
+        } else if (fieldType.equals(FieldType.BIGDECIMAL)) {
+            temp.add(FieldTypeParser.getBigDecimal(object));
+        } else if (fieldType.equals(FieldType.DOUBLE)) {
 			temp.add( FieldTypeParser.getDouble(object));
 		} else if (fieldType.equals(FieldType.LONG)) {
 			temp.add( FieldTypeParser.getLong(object));
