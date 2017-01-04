@@ -3,14 +3,14 @@
     <dataSource driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/fulfillment_ddb1" user="root" password="" batch-size="1"/>
 
     <document>
-        <entity name="customer" pk="id" query="select * from customer where updated_at > '${dih.last_index_time}'">
+        <entity name="customer" query="select * from customer">
             <field column="id" name="id" type="BIGINTEGER"/>
             <field column="external_id" name="external_id" type="STRING"/>
             <field column="created_at" name="created_at" type="DATE"/>
             <field column="updated_at" name="updated_at" type="DATE"/>
             <field column="password" name="password" type="STRING"/>
         </entity>
-        <entity name="document" pk="id" query="select * from document">
+        <entity name="document" query="select * from document">
             <field column="id" name="id" type="BIGINTEGER"/>
             <field column="external_id" name="external_id" type="STRING"/>
             <field column="created_at" name="created_at" type="DATE"/>
