@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import com.mongodb.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import net.sathis.export.sql.model.NoSQLWriter;
 
 import org.apache.commons.logging.Log;
@@ -14,11 +16,11 @@ import org.apache.commons.logging.LogFactory;
 
 public class MongoWriter extends NoSQLWriter {
 	
-	DBCollection collection = null;
+	MongoCollection collection = null;
 	
-	private DB db;
+	private MongoDatabase db;
 	
-	public DB getDB() {
+	public MongoDatabase getDB() {
 		return db;
 	}
 	
@@ -27,10 +29,10 @@ public class MongoWriter extends NoSQLWriter {
 	@Override
 	public void initConnection(ResourceBundle rb) throws UnknownHostException, MongoException {
 		if (rb.getString("mongo.useAuth").equalsIgnoreCase("true")) {
-			initConnection(rb.getString("mongo.host"), rb.getString("mongo.db") ,
-					rb.getString("mongo.user"), rb.getString("mongo.password"));
+				initConnection(rb.getString("mongo.host"), rb.getString("mongo.port"), rb.getString("mongo.db") ,
+						rb.getString("mongo.user"), rb.getString("mongo.password"));
 		} else {
-			initConnection( rb.getString("mongo.host"), rb.getString("mongo.db") );
+				initConnection( rb.getString("mongo.host"), rb.getString("mongo.port"), rb.getString("mongo.db") );
 		}
 		initCollection(rb.getString("mongo.collection"));
 	}
@@ -38,19 +40,27 @@ public class MongoWriter extends NoSQLWriter {
 	private void initCollection(String name) {
 		collection = getDB().getCollection(name);
 	}
-	
-	public void initConnection(String url, String dbName) throws UnknownHostException, MongoException {
-		Mongo m = new Mongo(url);
-		db = m.getDB(dbName);
-	}
-	public void initConnection(String url, String dbName, String user, String password) throws UnknownHostException, MongoException {
-		Mongo m = new Mongo(url);
-		db = m.getDB(dbName);
-		
-		if (!db.authenticate(user, password.toCharArray())) {
-			log.error("Couldn't Authenticate MongoDB!!!!!!.........");
-			throw new MongoException("Couldn't Authenticate !!!!!!.........");
+
+	public void initConnection(String url, String port, String dbName) throws UnknownHostException, MongoException {
+		String[] listOfHosts = url.split(",");
+		List<ServerAddress> serverAddressList = new ArrayList<ServerAddress>();
+		for (String host : listOfHosts){
+			serverAddressList.add(new ServerAddress(host, Integer.parseInt(port)));
 		}
+		MongoClient m = new MongoClient(serverAddressList);
+		db = m.getDatabase(dbName);
+	}
+	public void initConnection(String url, String port, String dbName, String user, String password) throws UnknownHostException, MongoException {
+		String[] listOfHosts = url.split(",");
+		List<ServerAddress> serverAddressList = new ArrayList<ServerAddress>();
+		for (String host : listOfHosts){
+			serverAddressList.add(new ServerAddress(host, Integer.parseInt(port)));
+		}
+		MongoCredential mongoCredential = MongoCredential.createCredential(user,dbName,password.toCharArray());
+		List<MongoCredential> mongoCredentialList = new ArrayList<MongoCredential>();
+		mongoCredentialList.add(mongoCredential);
+		MongoClient m = new MongoClient(serverAddressList);
+		db = m.getDatabase(dbName);
 	}
 	
 	@Override
@@ -63,7 +73,7 @@ public class MongoWriter extends NoSQLWriter {
 		}
 		if (list.size() > 0) {
 			long  t1 = System.currentTimeMillis();
-			collection.insert(list);
+			collection.insertMany(list);
 			long t2 = System.currentTimeMillis();
 			log.info("Time taken to Write "+ list.size() + " documents to NoSQL :" + ((t2-t1))  + " ms");
 		}
