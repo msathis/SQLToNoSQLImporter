@@ -24,32 +24,30 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-
-
 public class DataImporter {
 
 	private static Log log = LogFactory.getLog(DataImporter.class);
-	
+
 	private DataConfig config;
-	
+
 	private NoSQLWriter writer;
-	
+
 	private DataStoreType dataStoreType;
-	
+
 	int autoCommitSize = 500;
-	
+
 	int getAutoCommitSize() {
 		return autoCommitSize;
 	}
-	
+
 	void setAutoCommitSize(int newSize) {
 		autoCommitSize = newSize;
 	}
-	
+
 	DataConfig getConfig() {
-		    return config;
-    }
-	
+		return config;
+	}
+
 	public void setWriter(NoSQLWriter writer) {
 		this.writer = writer;
 	}
@@ -57,14 +55,14 @@ public class DataImporter {
 	public NoSQLWriter getWriter() {
 		return writer;
 	}
-	
+
 	private void findDataStoreWriter() throws InvalidAttributesException {
 		if (getDataStoreType().equals(DataStoreType.MONGO)) {
 			writer = new MongoWriter();
 		} else if (getDataStoreType().equals(DataStoreType.ES)) {
 			writer = new ESWriter();
-		} else if(getDataStoreType().equals(DataStoreType.COUCH)) { 
-		  writer = new CouchWriter();
+		} else if (getDataStoreType().equals(DataStoreType.COUCH)) {
+			writer = new CouchWriter();
 		} else {
 			throw new InvalidAttributesException("The requested datastore support is not available !.");
 		}
@@ -76,70 +74,79 @@ public class DataImporter {
 		getWriter().initConnection(rb);
 	}
 
-    private String getXmlFile(String path) {
-        if (new File(path).exists()) {
-            return path;
-        }
-        return  Thread.currentThread().getContextClassLoader().getResource(path).getFile();
-    }
+	private String getXmlFile(String path) {
+		if (new File(path).exists()) {
+			return path;
+		}
+		return Thread.currentThread().getContextClassLoader().getResource(path).getFile();
+	}
 
 	public void doDataImport(String path) {
-			InputSource file = new InputSource(getXmlFile(path));
-		  	loadDataConfig(file);
-		  	
-			if (config != null) {
-				for (DataConfig.Entity e : config.document.entities) {
-				      Map<String, DataConfig.Field> fields = new HashMap<String, DataConfig.Field>();
-				      initEntity(e, fields, false);
-				      identifyPk(e);
-				}
-				doFullImport();
-			} else {
-				log.error("Configuration files are missing !!!!!!!!.......");
+		InputSource file = new InputSource(getXmlFile(path));
+		loadDataConfig(file);
+
+		if (config != null && config.document != null && config.document.entities != null && config.document.entities.isEmpty() != true) {
+			for (DataConfig.Entity e : config.document.entities) {
+				Map<String, DataConfig.Field> fields = new HashMap<String, DataConfig.Field>();
+				initEntity(e, fields, false);
+				identifyPk(e);
 			}
-	  }
-	  
-	  private void identifyPk(DataConfig.Entity entity) {
-		  
-		    String schemaPk = "";
-		    entity.pkMappingFromSchema = schemaPk;
-		    
-		    for (DataConfig.Field field : entity.fields) {
-		      if(field.getName().equals(schemaPk)) {
-		        entity.pkMappingFromSchema = field.column;
-		        break;
-		      }
-		    } 
+			doFullImport();
+		} else {
+			if (config == null) {
+				log.error("MAIN CONFIG MISSING");
+			} else if (config.document == null) {
+				log.error("DOCUMENT IS MISSING");
+				log.error(config.toString());
+			} else if (config.document.entities == null) {
+				log.error("ENTITIES NOT SET");
+			} else if (config.document.entities.isEmpty()) {
+				log.error("ENTITIES IS EMPTY");
+			}
+		}
+	}
 
-	 }
-	  
-	  private  void loadDataConfig(InputSource configFile) {
+	private void identifyPk(DataConfig.Entity entity) {
 
-		    try {
-		      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		      
-		      DocumentBuilder builder = dbf.newDocumentBuilder();
-		      Document document;
-		      try {
-		        document = builder.parse(configFile);
-		      } finally {
-		        // some XML parsers are broken and don't close the byte stream (but they should according to spec)
-		        IOUtils.closeQuietly(configFile.getByteStream());
-		      }
+		String schemaPk = "";
+		entity.pkMappingFromSchema = schemaPk;
 
-		      config = new DataConfig();
-		      NodeList elems = document.getElementsByTagName("dataConfig");
-		      if(elems == null || elems.getLength() == 0) {
-		    	  log.error("the root node '<dataConfig>' is missing");
-		    	  throw new IOException();
-		      }
-		      	config.readFromXml((Element) elems.item(0));
-		      	log.info("Data Configuration loaded successfully");
-		    } catch (Exception e) {
-		    	log.error(e.getStackTrace());
-		  }
+		for (DataConfig.Field field : entity.fields) {
+			if (field.getName().equals(schemaPk)) {
+				entity.pkMappingFromSchema = field.column;
+				break;
+			}
+		}
 
-	  }
+	}
+
+	private void loadDataConfig(InputSource configFile) {
+
+		try {
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+			DocumentBuilder builder = dbf.newDocumentBuilder();
+			Document document;
+			try {
+				document = builder.parse(configFile);
+			} finally {
+				// some XML parsers are broken and don't close the byte stream (but they should according to spec)
+				IOUtils.closeQuietly(configFile.getByteStream());
+			}
+
+			config = new DataConfig();
+			NodeList elems = document.getElementsByTagName("dataConfig");
+			if (elems == null || elems.getLength() == 0) {
+				log.error("the root node '<dataConfig>' is missing");
+				throw new IOException();
+			}
+			config.readFromXml((Element) elems.item(0));
+			log.info("Data Configuration loaded successfully");
+		} catch (Exception e) {
+			log.error(e.getStackTrace());
+		}
+
+	}
 
 	private void initEntity(DataConfig.Entity e,
 			Map<String, DataConfig.Field> fields, boolean docRootFound) {
@@ -148,10 +155,10 @@ public class DataImporter {
 		if (!docRootFound && !"false".equals(e.docRoot)) {
 			e.isDocRoot = true;
 		}
-		
+
 		if (e.fields != null) {
 			for (DataConfig.Field f : e.fields) {
-				
+
 				fields.put(f.getName(), f);
 				f.entity = e;
 				f.allAttributes.put("boost", f.boost.toString());
@@ -163,26 +170,29 @@ public class DataImporter {
 		e.allFieldsList = Collections.unmodifiableList(e.allFieldsList);
 		e.allAttributes = Collections.unmodifiableMap(e.allAttributes);
 
-		if (e.entities == null)
+		if (e.entities == null) {
 			return;
+		}
 		for (DataConfig.Entity e1 : e.entities) {
 			e1.parentEntity = e;
 			initEntity(e1, fields, e.isDocRoot || docRootFound);
 		}
 	}
-	
-	 public void doFullImport() {
+
+	public void doFullImport() {
 		try {
 			DocBuilder docBuilder = new DocBuilder(this);
+			log.info("***** BUILT DOCS *****");
 			docBuilder.execute();
+			log.info("***** EXECUTED *****");
 			getWriter().close();
 			log.info("*****  Data import completed successfully. **********");
 		} catch (Throwable t) {
-		  log.error("*****  Data import failed. **********\n Reason is :");
+			log.error("*****  Data import failed. **********\n Reason is :");
 			t.printStackTrace();
 		}
-	  }
-	
+	}
+
 	public void setDataStoreType(DataStoreType exportType) {
 		this.dataStoreType = exportType;
 	}
@@ -190,8 +200,6 @@ public class DataImporter {
 	public DataStoreType getDataStoreType() {
 		return dataStoreType;
 	}
-
-
 
 	public static final String COLUMN = "column";
 
