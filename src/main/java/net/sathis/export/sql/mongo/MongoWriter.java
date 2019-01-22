@@ -29,7 +29,12 @@ public class MongoWriter extends NoSQLWriter {
 
 	@Override
 	public void initConnection(ResourceBundle rb) throws UnknownHostException, MongoException {
-		if (rb.getString("mongo.useAuth").equalsIgnoreCase("true")) {
+		if (!rb.getString("mongo.replicaSet").isEmpty()) {
+			initConnection(rb.getString("mongo.host"), rb.getString("mongo.port"),
+					rb.getString("mongo.db"), rb.getString("mongo.user"),
+					rb.getString("mongo.password"), rb.getString("mongo.replicaSet"),
+					rb.getString("mongo.authSource"));
+		} else if (rb.getString("mongo.useAuth").equalsIgnoreCase("true")) {
 			initConnection(rb.getString("mongo.host"), rb.getString("mongo.port"), rb.getString("mongo.db"),
 					rb.getString("mongo.user"), rb.getString("mongo.password"));
 		} else {
@@ -43,6 +48,14 @@ public class MongoWriter extends NoSQLWriter {
 		collection = getDB().getCollection(name);
 	}
 
+	/**
+	 * No authentication
+	 * @param url
+	 * @param port
+	 * @param dbName
+	 * @throws UnknownHostException
+	 * @throws MongoException
+	 */
 	public void initConnection(String url, String port, String dbName) throws UnknownHostException, MongoException {
 		String[] listOfHosts = url.split(",");
 		List<ServerAddress> serverAddressList = new ArrayList<ServerAddress>();
@@ -53,6 +66,16 @@ public class MongoWriter extends NoSQLWriter {
 		db = m.getDatabase(dbName);
 	}
 
+	/**
+	 * Username/Password authentication
+	 * @param url
+	 * @param port
+	 * @param dbName
+	 * @param user
+	 * @param password
+	 * @throws UnknownHostException
+	 * @throws MongoException
+	 */
 	public void initConnection(String url, String port, String dbName, String user, String password) throws UnknownHostException, MongoException {
 		String[] listOfHosts = url.split(",");
 		List<ServerAddress> serverAddressList = new ArrayList<ServerAddress>();
@@ -62,7 +85,33 @@ public class MongoWriter extends NoSQLWriter {
 		MongoCredential mongoCredential = MongoCredential.createCredential(user, dbName, password.toCharArray());
 		List<MongoCredential> mongoCredentialList = new ArrayList<MongoCredential>();
 		mongoCredentialList.add(mongoCredential);
-		MongoClient m = new MongoClient(serverAddressList);
+		MongoClient m = new MongoClient(serverAddressList, mongoCredentialList);
+		db = m.getDatabase(dbName);
+	}
+
+	/**
+	 * Replica Set with Username/Password authentication (Mongo Atlas)
+	 * @param url
+	 * @param port
+	 * @param dbName
+	 * @param user
+	 * @param password
+	 * @param replicaSet
+	 * @throws UnknownHostException
+	 * @throws MongoException
+	 */
+	public void initConnection(String url, String port, String dbName, String user, String password, String replicaSet, String authSource) throws UnknownHostException, MongoException {
+		String[] listOfHosts = url.split(",");
+		List<ServerAddress> serverAddressList = new ArrayList<ServerAddress>();
+		for (String host : listOfHosts) {
+			serverAddressList.add(new ServerAddress(host, Integer.parseInt(port)));
+		}
+
+		MongoCredential mongoCredential = MongoCredential.createCredential(user, authSource, password.toCharArray());
+		List<MongoCredential> mongoCredentialList = new ArrayList<MongoCredential>();
+		mongoCredentialList.add(mongoCredential);
+		MongoClientOptions mongoOptions = MongoClientOptions.builder().sslEnabled(Boolean.TRUE).requiredReplicaSetName(replicaSet).build();
+		MongoClient m = new MongoClient(serverAddressList, mongoCredentialList, mongoOptions);
 		db = m.getDatabase(dbName);
 	}
 
