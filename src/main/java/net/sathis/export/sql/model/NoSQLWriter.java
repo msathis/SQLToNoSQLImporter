@@ -7,7 +7,7 @@ import java.util.ResourceBundle;
 public class NoSQLWriter {
 
 	private String primaryKey = null;
-	
+
 	public void setPrimaryKey(String primaryKey) {
 		this.primaryKey = primaryKey;
 	}
@@ -18,11 +18,14 @@ public class NoSQLWriter {
 
 	public void writeToNoSQL(List<Map<String, Object>> entityList) throws Exception {
 	}
-	
+
 	public void initConnection(ResourceBundle rb) throws Exception {
 	}
-	
-	public void close() {		
+
+	public void close() {
 	}
-	
+
+	public void initCollection(String name) {
+	}
+
 }
